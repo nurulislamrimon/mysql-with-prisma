@@ -1,13 +1,47 @@
 import { PrismaClient } from "@prisma/client";
 import express, { Request, Response } from "express";
+import cors from "cors";
+
+// create server
 const app = express();
 const port = 5000;
 
+// create query handler prisma client
 const prisma = new PrismaClient();
+
+// handle cors
+app.use(cors());
+
+// middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 async function main() {
   app.get("/", (req: Request, res: Response) => {
-    res.send("Hello World!");
+    res.send("Welcome to MySql - API!");
+    console.log(req.originalUrl);
+  });
+
+  // ======================== get users ========================
+  app.get("/user", async (req: Request, res: Response) => {
+    const result = await prisma.user.findMany();
+
+    console.log(result);
+
+    res.json(result);
+    console.log(req.originalUrl);
+  });
+
+  // ======================== add user ========================
+  app.post("/user/add", async (req: Request, res: Response) => {
+    const result = await prisma.user.create({
+      data: req.body,
+    });
+
+    console.log(result);
+
+    res.json(result);
+    console.log(req.originalUrl);
   });
 }
 
