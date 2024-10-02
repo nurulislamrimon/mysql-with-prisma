@@ -1,0 +1,13 @@
+@url = http://localhost:5000
+
+####
+GET {{url}}/users
+
+####
+POST {{url}}/users/add
+Content-Type: application/json
+
+{
+    "name": "sample",
+    "email": "nuru@gmail.com"
+}

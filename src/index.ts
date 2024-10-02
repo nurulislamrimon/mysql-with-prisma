@@ -1,5 +1,10 @@
-import { PrismaClient } from "@prisma/client";
-import express, { Request, Response } from "express";
+import { Prisma, PrismaClient } from "@prisma/client";
+import express, {
+  ErrorRequestHandler,
+  NextFunction,
+  Request,
+  Response,
+} from "express";
 import cors from "cors";
 
 // create server
@@ -23,7 +28,7 @@ async function main() {
   });
 
   // ======================== get users ========================
-  app.get("/user", async (req: Request, res: Response) => {
+  app.get("/users", async (req: Request, res: Response) => {
     const result = await prisma.user.findMany();
 
     res.json(result);
@@ -32,15 +37,50 @@ async function main() {
   });
 
   // ======================== add user ========================
-  app.post("/user/add", async (req: Request, res: Response) => {
-    const result = await prisma.user.create({
-      data: req.body,
-    });
+  app.post(
+    "/users/add",
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        console.log(req.body);
 
-    res.json(result);
-    console.log(result);
-    console.log(req.originalUrl);
-  });
+        const result = await prisma.user.create({
+          data: req.body,
+        });
+
+        res.json(result);
+        console.log(result);
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  // ======================== error handler ========================
+  // ======================== error handler middleware ========================
+  app.use(
+    ((err: any, req: Request, res: Response, next: NextFunction) => {
+      // Check if it's a known Prisma error
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        if (err.code === "P2002") {
+          return res.status(400).json({
+            status: "error",
+            message: "Unique constraint failed. The record already exists.",
+          });
+        }
+      } else if (err instanceof Prisma.PrismaClientValidationError) {
+        return res.status(400).json({
+          status: "error",
+          message: "Prisma validation error: " + err.message,
+        });
+      }
+
+      // Handle generic errors
+      res.status(500).json({
+        status: "error",
+        message: err.message || "Internal server error",
+      });
+    }) as ErrorRequestHandler // Cast to ErrorRequestHandler to match the expected type
+  );
 }
 
 // call the main function
