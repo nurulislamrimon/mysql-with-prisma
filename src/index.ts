@@ -4,7 +4,7 @@ import cors from "cors";
 
 // create server
 const app = express();
-const port = 5000;
+const port = process.env.port ?? 5000;
 
 // create query handler prisma client
 const prisma = new PrismaClient();
@@ -26,9 +26,8 @@ async function main() {
   app.get("/user", async (req: Request, res: Response) => {
     const result = await prisma.user.findMany();
 
-    console.log(result);
-
     res.json(result);
+    console.log(result);
     console.log(req.originalUrl);
   });
 
@@ -38,9 +37,8 @@ async function main() {
       data: req.body,
     });
 
-    console.log(result);
-
     res.json(result);
+    console.log(result);
     console.log(req.originalUrl);
   });
 }
